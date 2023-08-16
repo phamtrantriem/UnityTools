@@ -31,7 +31,7 @@ public class RepresentAnimation : EditorWindow
 
     Vector3[] positions;
 
-    [MenuItem("Tools/Represent Animation")]
+    [MenuItem("TechArtTool/Represent Animation")]
     static void Init()
     {
         GetWindowWithRect(typeof(RepresentAnimation), new Rect(200f, 200f, 500f, 600f));
