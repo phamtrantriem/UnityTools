@@ -44,7 +44,7 @@ public class ReplaceMaterials : EditorWindow
         GUILayout.Label("Target material");
         targetMaterial = (Material)EditorGUILayout.ObjectField(targetMaterial, typeof(Material), false);
         GUILayout.EndVertical();
-                                   
+
         GUILayout.BeginVertical();
         GUILayout.Label("Changed material");
         changedMaterial = (Material)EditorGUILayout.ObjectField(changedMaterial, typeof(Material), false);
@@ -62,16 +62,18 @@ public class ReplaceMaterials : EditorWindow
 
             listPrefabs.Sort(SortAlphabetically);
             listScenes.Sort(SortAlphabetically);
-            
+
         }
-        
-        if(listPrefabs != null && listPrefabs.Count == 0)
+
+        if (listPrefabs != null && listPrefabs.Count == 0)
         {
             editorMode = 1;
-        } else if (listScenes != null && listScenes.Count == 0)
+        }
+        else if (listScenes != null && listScenes.Count == 0)
         {
-            editorMode= 0;
-        } else
+            editorMode = 0;
+        }
+        else
         {
             editorMode = GUI.SelectionGrid(GUILayoutUtility.GetRect(2, 20), editorMode, modes, 2, "Button");
         }
@@ -269,47 +271,24 @@ public class ReplaceMaterials : EditorWindow
                     {
                         GUILayout.BeginHorizontal();
                         GUILayout.Label(path, GUILayout.Width(position.width / 1.5f));
-                        if (GUILayout.Button("Select", GUILayout.Width(position.width)))
+
+
+                        if (GUILayout.Button("Select Renderer", GUILayout.Width(position.width / 12)))
                         {
-                            Selection.activeObject = AssetDatabase.LoadMainAssetAtPath(path);
+                            //Selection.activeObject = AssetDatabase.LoadMainAssetAtPath(path);
                             var currentScene = EditorSceneManager.OpenScene(path);
 
-                            if (1 > 0)
+                            List<GameObject> rootObjectsInScene = currentScene.GetRootGameObjects().ToList();
+                            SpriteRenderer[] srList;
+                            foreach (GameObject obj in rootObjectsInScene)
                             {
-                                if (GUILayout.Button("Select Renderer", GUILayout.Width(position.width / 12)))
+                                srList = obj.GetComponentsInChildren<SpriteRenderer>(true).Where(a => a.sharedMaterial == targetMaterial).ToArray();
+                                Selection.objects = srList;
+                                Debug.Log("Prefab: " + path.Split("/").Last() + " || Number Influence Sprites of " + obj.name + ": " + srList.Length);
+                                foreach (var sr in srList)
                                 {
-                                    List<GameObject> rootObjectsInScene = currentScene.GetRootGameObjects().ToList();
-
-                                    Debug.Log("root game object size : " + rootObjectsInScene.Count);
-                                    SpriteRenderer[] srList;
-                                    foreach (GameObject obj in rootObjectsInScene)
-                                    {
-                                        srList = obj.GetComponentsInChildren<SpriteRenderer>(true).Where(a => a.sharedMaterial == targetMaterial).ToArray();
-                                        Selection.objects = srList;
-                                        Debug.Log("Prefab: " + path.Split("/").Last() + " || Number Influence Sprites: " + srList.Length);
-                                        foreach (var sr in srList)
-                                        {
-                                            Debug.Log("Sprite.name: " + sr.name);
-                                            Debug.Log("Sprite.material: " + sr.sharedMaterial.name);
-                                        }
-                                    }
-                                }
-                                if (changedMaterial != null)
-                                {
-                                    if (GUILayout.Button("Change Renderer", GUILayout.Width(position.width / 12)))
-                                    {
-                                        var prefab = PrefabUtility.LoadPrefabContents(path);
-                                        SpriteRenderer[] srList = prefab.GetComponentsInChildren<SpriteRenderer>(true).Where(a => a.sharedMaterial == targetMaterial).ToArray();
-                                        foreach (SpriteRenderer sR in srList)
-                                        {
-                                            if (sR.sharedMaterial.name == targetMaterial.name)
-                                            {
-                                                sR.sharedMaterial = changedMaterial;
-                                            }
-                                        }
-                                        PrefabUtility.SaveAsPrefabAsset(prefab, path);
-                                        PrefabUtility.UnloadPrefabContents(prefab);
-                                    }
+                                    Debug.Log("Sprite.name: " + sr.name);
+                                    Debug.Log("Sprite.material: " + sr.sharedMaterial.name);
                                 }
                             }
 
@@ -318,7 +297,159 @@ public class ReplaceMaterials : EditorWindow
 
                         }
 
-                        if (GUILayout.Button("Change"))
+                        if (changedMaterial != null)
+                        {
+                            if (GUILayout.Button("Change Renderer", GUILayout.Width(position.width / 12)))
+                            {
+                                //Selection.activeObject = AssetDatabase.LoadMainAssetAtPath(path);
+                                var currentScene = EditorSceneManager.OpenScene(path);
+
+                                GameObject[] gameObjects = currentScene.GetRootGameObjects();
+
+                                //SpriteRenderer[] srList;
+                                List<SpriteRenderer> srList = new List<SpriteRenderer>();
+
+                                foreach (var gO in gameObjects)
+                                {
+                                    SpriteRenderer[] sList = gO.GetComponentsInChildren<SpriteRenderer>(true).Where(a => a.sharedMaterial == targetMaterial).ToArray();
+                                    foreach (var sr in sList)
+                                    {
+                                        srList.Add(sr);
+                                    }
+                                }
+                                //var prefab = PrefabUtility.LoadPrefabContents(path);
+                                //SpriteRenderer[] srList = prefab.GetComponentsInChildren<SpriteRenderer>(true).Where(a => a.sharedMaterial == targetMaterial).ToArray();
+                                foreach (SpriteRenderer sR in srList)
+                                {
+                                    if (sR.sharedMaterial == targetMaterial)
+                                    {
+                                        sR.sharedMaterial = changedMaterial;
+                                    }
+                                }
+
+                                EditorSceneManager.SaveScene(currentScene);
+                            }
+                        }
+
+
+                        if (GUILayout.Button("Select VFX", GUILayout.Width(position.width / 12)))
+                        {
+                            Selection.activeObject = AssetDatabase.LoadMainAssetAtPath(path);
+                            var currentScene = EditorSceneManager.OpenScene(path, OpenSceneMode.Single);
+
+                            List<GameObject> rootObjectsInScene = currentScene.GetRootGameObjects().ToList();
+
+                            ParticleSystemRenderer[] psList;
+                            foreach (GameObject obj in rootObjectsInScene)
+                            {
+                                psList = obj.GetComponentsInChildren<ParticleSystemRenderer>(true).Where(a => a.sharedMaterial == targetMaterial).ToArray();
+                                Selection.objects = psList;
+                                Debug.Log("Scene: " + path.Split("/").Last() + " || Number Influence Particles of " + obj.name + ": " + psList.Length);
+                                foreach (var sr in psList)
+                                {
+                                    Debug.Log("Particle.name: " + sr.name);
+                                    Debug.Log("Particle.material: " + sr.sharedMaterial.name);
+                                }
+                            }
+                            EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo();
+                            //AssetDatabase.SaveAssets();
+
+                        }
+
+                        if (changedMaterial != null)
+                        {
+                            if (GUILayout.Button("Change VFX", GUILayout.Width(position.width / 12)))
+                            {
+                                Selection.activeObject = AssetDatabase.LoadMainAssetAtPath(path);
+                                var currentScene = EditorSceneManager.OpenScene(path, OpenSceneMode.Single);
+
+                                GameObject[] gameObjects = currentScene.GetRootGameObjects();
+
+                                //SpriteRenderer[] srList;
+                                List<ParticleSystemRenderer> psList = new List<ParticleSystemRenderer>();
+
+                                foreach (var gO in gameObjects)
+                                {
+                                    Debug.Log("Gameobject root: " + gO.name);
+                                    ParticleSystemRenderer[] sList = gO.GetComponentsInChildren<ParticleSystemRenderer>(true).Where(a => a.sharedMaterial == targetMaterial).ToArray();
+                                    foreach (var sr in sList)
+                                    {
+                                        psList.Add(sr);
+                                    }
+                                }
+                                //var prefab = PrefabUtility.LoadPrefabContents(path);
+                                //SpriteRenderer[] srList = prefab.GetComponentsInChildren<SpriteRenderer>(true).Where(a => a.sharedMaterial == targetMaterial).ToArray();
+                                foreach (ParticleSystemRenderer pS in psList)
+                                {
+                                    if (pS.sharedMaterial == targetMaterial)
+                                    {
+                                        pS.sharedMaterial = changedMaterial;
+                                    }
+                                }
+
+                                EditorSceneManager.SaveScene(currentScene);
+                            }
+                        }
+
+                        if (GUILayout.Button("Select Image", GUILayout.Width(position.width / 12)))
+                        {
+                            //Selection.activeObject = AssetDatabase.LoadMainAssetAtPath(path);
+                            var currentScene = EditorSceneManager.OpenScene(path);
+
+                            List<GameObject> rootObjectsInScene = currentScene.GetRootGameObjects().ToList();
+
+                            Image[] srList;
+                            foreach (GameObject obj in rootObjectsInScene)
+                            {
+                                srList = obj.GetComponentsInChildren<Image>(true).Where(a => a.material == targetMaterial).ToArray();
+                                Selection.objects = srList;
+                                Debug.Log("Prefab: " + path.Split("/").Last() + " || Number Influence Image of " + obj.name + ": " + srList.Length);
+                                foreach (var sr in srList)
+                                {
+                                    Debug.Log("Sprite.name: " + sr.name);
+                                    Debug.Log("Sprite.material: " + sr.material.name);
+                                }
+                            }
+
+                            EditorSceneManager.CloseScene(currentScene, true);
+                            //AssetDatabase.SaveAssets();
+
+                        }
+
+                        if (changedMaterial != null)
+                        {
+                            if (GUILayout.Button("Change Image", GUILayout.Width(position.width / 12)))
+                            {
+                                //Selection.activeObject = AssetDatabase.LoadMainAssetAtPath(path);
+                                var currentScene = EditorSceneManager.OpenScene(path);
+
+                                GameObject[] gameObjects = currentScene.GetRootGameObjects();
+
+                                //SpriteRenderer[] srList;
+                                List<Image> srList = new List<Image>();
+
+                                foreach (var gO in gameObjects)
+                                {
+                                    Image[] iList = gO.GetComponentsInChildren<Image>(true).Where(a => a.material == targetMaterial).ToArray();
+                                    foreach (var sr in iList)
+                                    {
+                                        srList.Add(sr);
+                                    }
+                                }
+                                //var prefab = PrefabUtility.LoadPrefabContents(path);
+                                //SpriteRenderer[] srList = prefab.GetComponentsInChildren<SpriteRenderer>(true).Where(a => a.sharedMaterial == targetMaterial).ToArray();
+                                foreach (Image sR in srList)
+                                {
+                                    if (sR.material == targetMaterial)
+                                    {
+                                        sR.material = changedMaterial;
+                                    }
+                                }
+
+                                EditorSceneManager.SaveScene(currentScene);
+                            }
+                        }
+                        /*if (GUILayout.Button("Change"))
                         {
                             var currentScene = EditorSceneManager.OpenScene(path);
 
@@ -327,16 +458,17 @@ public class ReplaceMaterials : EditorWindow
                             EditorSceneManager.SaveScene(currentScene);
                             EditorSceneManager.CloseScene(currentScene, true);
 
-                        }
+                        }*/
                         GUILayout.EndHorizontal();
                     }
                     GUILayout.EndScrollView();
-
-                } else
+                    Debug.Log("SCeneCountpreview" + EditorSceneManager.loadedSceneCount + " === " + UnityEngine.SceneManagement.SceneManager.sceneCountInBuildSettings + " === " + EditorSceneManager.loadedSceneCount);
+                }
+                else
                 {
                     GUILayout.Label("No scene here!!");
                 }
-                
+
                 break;
         }
     }
