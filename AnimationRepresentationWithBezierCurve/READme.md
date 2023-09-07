@@ -12,7 +12,6 @@ Email : support@arkhaminteractive.com
 
 Customize for representing animation by me, Meirt.
 
-=====
 Represent animation in Editor View at "Tools/Represent Animation"
 =====
 
