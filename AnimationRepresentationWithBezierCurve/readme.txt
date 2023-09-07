@@ -5,7 +5,7 @@ Version : 1.0
 Email : support@arkhaminteractive.com
 =====
 
-Customize for reprenting animation by me, Meirt.
+Customize for representing animation by me, Meirt.
 
 =====
 Represent animation in Editor View at "Tools/Represent Animation"
